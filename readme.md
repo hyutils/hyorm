@@ -249,3 +249,474 @@ query.page(Json.toMap(Json.toJson(TaskBadMessage.builder()
 ```
 最终便达到了可以使用直观的方式写结构化单表SQL的目的。
 对于上述简单对象的生成，可以使用GenerateOrm对象里面的getSimpleModel生成model对象。从而快速进行使用
+
+# 不带条件简单查询
+
+## simpleGet方法
+查询单个对象，如果有多个，只返回第一个
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        System.out.println(wordsQuery.find("value").find("id").find("thesaurus_code").size(1).simpleGet());
+    }
+```
+生成的sql为：
+```sql
+SELECT value,id,thesaurus_code FROM material_thesaurus_words  limit 1 ;
+```
+
+## listMapGet方法
+查询全部对象
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        System.out.println(wordsQuery.find("value").find("id").find("thesaurus_code").size(2).listMapGet());
+    }
+```
+生成的sql为：
+```sql
+SELECT value,id,thesaurus_code FROM material_thesaurus_words  limit 2 ;
+```
+结果为：
+```
+[{value=xxxxxxxxx, id=585730307940941826, thesaurus_code=23}, {value=18&xxxxx, id=585730307940941827, thesaurus_code=23}]
+```
+## find方法
+指查询某个字段
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        System.out.println(wordsQuery.find("value").find("id").find("thesaurus_code").size(1).simpleGet());
+    }
+``` 
+生成的sql为：
+```sql
+SELECT value,id,thesaurus_code FROM material_thesaurus_words  limit 1 ;
+```
+
+
+
+## page方法和size方法
+多少页，页的大小为多少，page方法需要和size一起使用，但是size方法可以单独使用
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        System.out.println(wordsQuery.find("value").find("id").find("thesaurus_code").page(1).size(1).simpleGet());
+    }
+```
+
+生成的sql为
+```sql
+SELECT value,id,thesaurus_code FROM material_thesaurus_words  offset 0  limit 1 ;
+```
+
+## orderBy方法
+按条件排序的方法
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        System.out.println(wordsQuery
+                .find("value").find("id").find("thesaurus_code")
+                .orderBy("thesaurus_code","desc").orderBy("value","desc")
+                .page(1).size(2)
+                .listMapGet());
+    }
+```
+生成的sql为：
+```sql
+SELECT value,id,thesaurus_code FROM material_thesaurus_words order by thesaurus_code desc,value desc  offset 0  limit 2 ;
+```
+
+# 带条件查询
+## where方法
+该方法的入参是`WhereSyntaxTree`类，该类有两个继承类，分别是`AndWhereSyntaxTree`和`OrWhereSyntaxTree`，这两种不同的where树代表了两种不同的语义。
+
+以下的内容均来源于上面两个语义类
+
+## andWheres方法
+AndWhereSyntaxTree语义，即内部的是用and连接起来的操作
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        System.out.println(wordsQuery
+                .find("value").find("id").find("thesaurus_code")
+                .orderBy("thesaurus_code","desc").orderBy("value","desc")
+                .page(1).size(2)
+                .andWheres(new HashMap<String, Object>(){
+                    {
+                        put("thesaurus_code","14");
+                        put("value","demo123");
+                    }
+                })
+                .listMapGet());
+    }
+```
+生成的sql为：
+```sql
+SELECT value,id,thesaurus_code FROM material_thesaurus_words WHERE value = :value AND thesaurus_code = :thesaurus_code order by thesaurus_code desc,value desc  offset 0  limit 2 ;
+```
+参数为：
+```
+{value=demo123, thesaurus_code=14}
+```
+## orwhere方法
+OrWhereSyntaxTree语义，即内部使用or连接
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        System.out.println(wordsQuery
+                .find("value").find("id").find("thesaurus_code")
+                .orderBy("thesaurus_code","desc").orderBy("value","desc")
+                .page(1).size(2)
+                .orWheres(new HashMap<String, Object>(){
+                    {
+                        put("thesaurus_code","14");
+                        put("value","demo123");
+                    }
+                })
+                .listMapGet());
+    }
+```
+生成的sql为：
+```sql
+SELECT value,id,thesaurus_code FROM material_thesaurus_words WHERE value = :value OR thesaurus_code = :thesaurus_code order by thesaurus_code desc,value desc  offset 0  limit 2 ;
+```
+
+## 多个相同的参数or/and起来
+由于hashmap本身是去重的，导致传入的时候无法做一个没有去重的参数，所以这里引入了andWheres和orWheres的重载方法，传入一个三元组。除了在这里可用之外，三元组还有别的用法，这里先介绍重复参数的用法。
+### orwheres传入三元组
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        System.out.println(wordsQuery
+                .find("value").find("id").find("thesaurus_code")
+                .page(1).size(2)
+                .orWheres(new ArrayList<Triplet<String, String, Object>>(){
+                    {
+                        add(new Triplet<>("thesaurus_code","=","99"));
+                        add(new Triplet<>("thesaurus_code","=","14"));
+                    }
+                })
+                .listMapGet());
+    }
+```
+生成的sql为
+```sql
+SELECT value,id,thesaurus_code FROM material_thesaurus_words WHERE thesaurus_code = :thesaurus_code OR thesaurus_code = :a231e89bab64bed3388a6f9d0745be11  offset 0  limit 2 ;
+```
+参数为：
+```
+{thesaurus_code=99, 96000698b09c6b1afa517dd677fb90f5=14}
+```
+### andwheres传入三元组
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        System.out.println(wordsQuery
+                .find("value").find("id").find("thesaurus_code")
+                .page(1).size(2)
+                .andWheres(new ArrayList<Triplet<String, String, Object>>(){
+                    {
+                        add(new Triplet<>("thesaurus_code","=","99"));
+                        add(new Triplet<>("thesaurus_code","=","14"));
+                    }
+                })
+                .listMapGet());
+    }
+
+```
+生成的sql为：
+```sql
+SELECT value,id,thesaurus_code FROM material_thesaurus_words WHERE thesaurus_code = :thesaurus_code AND thesaurus_code = :5363ad8bf3fa098218eb28a15b2f3872  offset 0  limit 2 ;
+```
+参数为：
+```
+{5363ad8bf3fa098218eb28a15b2f3872=14, thesaurus_code=99}
+```
+## 组合使用
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        System.out.println(wordsQuery
+                .find("value").find("id").find("thesaurus_code")
+                .page(1).size(2)
+                .orWheres(new ArrayList<Triplet<String, String, Object>>(){
+                    {
+                        add(new Triplet<>("thesaurus_code","=","99"));
+                        add(new Triplet<>("thesaurus_code","=","14"));
+                    }
+                })
+                .andWheres(new ArrayList<Triplet<String, String, Object>>(){
+                    {
+                        add(new Triplet<>("thesaurus_code","=","99"));
+                        add(new Triplet<>("thesaurus_code","=","14"));
+                    }
+                })
+                .listMapGet());
+    }
+```
+生成的sql为
+```sql
+SELECT value, id, thesaurus_code
+FROM material_thesaurus_words
+WHERE thesaurus_code = :thesaurus_code
+   OR thesaurus_code = :f6c7a5c9ac4f6fb2f77539b6b31c8f14 AND
+      (thesaurus_code = :f65a9d7f4cafa174ce97dfb216321307 AND thesaurus_code = :27d714567083ce319446329df70ea1ae)
+offset 0 limit 2;
+```
+参数为：
+```
+{f6c7a5c9ac4f6fb2f77539b6b31c8f14=14, 27d714567083ce319446329df70ea1ae=14, f65a9d7f4cafa174ce97dfb216321307=99, thesaurus_code=99}
+```
+
+
+## 多级参数
+前面介绍的参数均出现在单层，所以在进行or操作的时候，如果再和别的条件进行and，可以发现其实生成的sql是有问题的。那么此时就需要引入多级参数了。
+
+多级参数中，三元组的第三个参数可以传入一个`WhereSyntaxTree`对象，则这个对象作为二级参数存在。来看一个例子
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        WhereSyntaxTree whereSyntaxTree = new WhereSyntaxTree();
+        System.out.println(wordsQuery
+                .find("value").find("id").find("thesaurus_code")
+                .page(1).size(2)
+                .andWheres(new ArrayList<Triplet<String, String, Object>>(){
+                    {
+                        add(new Triplet<>("thesaurus_code","=", whereSyntaxTree.createOrTreeByOperate(new ArrayList<Triplet<String, String, Object>>(){
+                            {
+                                add(new Triplet<>("thesaurus_code","=","99"));
+                                add(new Triplet<>("thesaurus_code","=","14"));
+                            }
+                        })));
+                        add(new Triplet<>("这个随便写","=",whereSyntaxTree.createAndTreeByOperate(new ArrayList<Triplet<String, String, Object>>(){
+                            {
+                                add(new Triplet<>("value","=","22"));
+                                add(new Triplet<>("value","=","11"));
+                            }
+                        })));
+                        add(new Triplet<>("deleted_mark","=",false));
+                    }
+                })
+                .listMapGet());
+    }
+```
+生成的sql为：
+```sql
+SELECT value, id, thesaurus_code
+FROM material_thesaurus_words
+WHERE (thesaurus_code = :thesaurus_code OR thesaurus_code = :824abb38c3759e0a61a01f434237d6ed)
+  AND (value = :value AND value = :c621bd6517d712bda0a05c313111ac67)
+  AND deleted_mark = :deleted_mark
+offset 0 limit 2;
+```
+参数为
+```
+{824abb38c3759e0a61a01f434237d6ed=14, deleted_mark=false, c621bd6517d712bda0a05c313111ac67=11, value=22, thesaurus_code=99}
+```
+可以看见，这次or语句就被括号包裹起来了。
+
+# 条件不是等号的查询
+## 利用三元组
+三元组法上面已经介绍了，这里简单提供一些使用例子
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        WhereSyntaxTree whereSyntaxTree = new WhereSyntaxTree();
+        System.out.println(wordsQuery
+                .find("value").find("id").find("thesaurus_code")
+                .page(1).size(2)
+                .andWheres(new ArrayList<Triplet<String, String, Object>>(){
+                    {
+                        add(new Triplet<>("thesaurus_code","=", whereSyntaxTree.createOrTreeByOperate(new ArrayList<Triplet<String, String, Object>>(){
+                            {
+                                add(new Triplet<>("thesaurus_code","like","99%"));
+                                add(new Triplet<>("thesaurus_code","like","14%"));
+                            }
+                        })));
+                        add(new Triplet<>("这个随便写","=",whereSyntaxTree.createAndTreeByOperate(new ArrayList<Triplet<String, String, Object>>(){
+                            {
+                                add(new Triplet<>("value","!=","22"));
+                                add(new Triplet<>("value","!=","11"));
+                            }
+                        })));
+                        add(new Triplet<>("id",">",1L));
+                        add(new Triplet<>("deleted_mark","=",false));
+                    }
+                })
+                .listMapGet());
+    }
+```
+生成的sql为：
+```sql
+SELECT value, id, thesaurus_code
+FROM material_thesaurus_words
+WHERE (thesaurus_code like :thesaurus_code OR thesaurus_code like :2cdde9107318c2af77faa6bc8d62df95)
+  AND (value != :value AND value != :5408b2f7440d44234993b8ae44ae3860)
+  AND id > :id
+  AND deleted_mark = :deleted_mark
+offset 0 limit 2;
+```
+除了like，数据库支持的其他简单操作也都能支持，只不过有一些特殊的函数需要手动编写SQL。下面简单介绍下编写SQL时，该框架的使用方法。
+
+# 直接执行
+## 获取列表
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        System.out.println(wordsQuery.totalSql("select thesaurus_code,count(id) from material_thesaurus_words group by thesaurus_code;").listMapGet());
+}
+```
+输出结果为：
+```sql
+[{thesaurus_code=19, count=3772}, {thesaurus_code=23, count=6226}, {thesaurus_code=99, count=2}, {thesaurus_code=57, count=411}, {thesaurus_code=97, count=3353}, {thesaurus_code=12, count=2}, {thesaurus_code=27, count=3427}, {thesaurus_code=24, count=6}, {thesaurus_code=30, count=229}, {thesaurus_code=16, count=289}]
+```
+
+## 获取一个
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        System.out.println(wordsQuery.totalSql("select thesaurus_code,count(id) from material_thesaurus_words group by thesaurus_code order by count desc limit 1;").simpleGet());
+}
+```
+执行的结果为：
+```java
+{thesaurus_code=23, count=6226}
+```
+
+## 带参数
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        System.out.println(wordsQuery.totalSql("select thesaurus_code,count(id) from material_thesaurus_words where deleted_mark = :deleted_mark group by thesaurus_code order by count desc;").addParams(new HashMap<String, Object>(){
+            {
+                put("deleted_mark",false);
+            }
+        }).listMapGet());
+}
+```
+方法为addParams，用法与jdbc差不多。
+
+# 更新数据
+## update方法
+与条件查询方法一样，update方法也可以传入hashmap和三元组列表两种，适用于不同的场景。
+### 传入map
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        Map<String,Object> condition = wordsQuery.find("id").size(1).simpleGet();
+        wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        wordsQuery.update(condition,new HashMap<String, Object>(){
+            {
+                put("deleted_mark",true);
+            }
+        });
+}
+```
+生成的sql为：
+```sql
+UPDATE material_thesaurus_words SET  deleted_mark=:setdeleted_mark,modified_time=:setmodified_time WHERE id = :id ;
+```
+参数为：
+```
+{modified_time=2023-06-05T17:37:57, setmodified_time=2023-06-05T17:37:56.998, id=585730307940941826, setdeleted_mark=true}
+```
+其中modified_time为默认更新字段
+
+### 传入三元组列表
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        Map<String,Object> condition = wordsQuery.find("id").size(1).simpleGet();
+        wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        wordsQuery.update(new ArrayList<Triplet<String, String, Object>>(){
+            {
+                add(new Triplet<>("deleted_mark","!=",true));
+            }
+        },new HashMap<String, Object>(){
+            {
+                put("deleted_mark",true);
+            }
+        });
+}
+```
+生成的sql是：
+```sql
+UPDATE material_thesaurus_words SET  deleted_mark=:setdeleted_mark,modified_time=:setmodified_time WHERE deleted_mark != :deleted_mark ;
+```
+# 保存数据
+## insert方法
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        wordsQuery.insert(new HashMap<String, Object>(){
+            {
+                put("value","123");
+                put("thesaurus_code","1");
+            }
+        });
+}
+```
+生成的sql为：
+```sql
+INSERT INTO material_thesaurus_words(value,thesaurus_code) VALUES (:value,:thesaurus_code) RETURNING id;
+```
+## batchInsert方法
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+        wordsQuery.batchInsert(new ArrayList<Map<String, Object>>(){
+            {
+                add(new HashMap<String, Object>(){
+                    {
+                        put("value","123");
+                        put("thesaurus_code","1");
+                    }
+                });
+                add(new HashMap<String, Object>(){
+                    {
+                        put("value","1234");
+                        put("thesaurus_code","1");
+                    }
+                });
+            }
+        });
+```
+生成的sql为：
+```sql
+INSERT INTO material_thesaurus_words(value,thesaurus_code) VALUES (:value0,:thesaurus_code0),(:value1,:thesaurus_code1);
+```
+# 删除
+## delete方法
+按id删除
+```java
+    @Test
+    public void demo2(){
+        SimpleQuery wordsQuery = new SimpleQuery(MaterialThesaurusWords.class);
+
+        wordsQuery.delete(wordsQuery.find("id").size(1).simpleGet().get("id"));
+}
+```
+生成sql：
+```sql
+UPDATE material_thesaurus_words SET  deleted_mark=:setdeleted_mark,deleted_time=:setdeleted_time WHERE id = :1c950fec1d9bb9f2a2a14502fa82d6d8 ;
+```
