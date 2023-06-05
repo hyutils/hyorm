@@ -1,4 +1,18 @@
 # 基础文档
+hyorm，一款自研java orm框架
+## 使用简介
+项目地址： https://github.com/hyutils/hyorm
+
+简介地址：https://mp.weixin.qq.com/s/QypOXRgCnt7e6Znig_89rQ
+
+使用方法：引入maven
+```xml
+<dependency>
+        <groupId>com.hyutils</groupId>
+        <artifactId>core</artifactId>
+        <version>1.0-SNAPSHOT</version>
+</dependency>
+```
 ## 前提
 所有的操作都需要创建一个简单Query对象，在并发环境中，请确保不同的查询语句创建不同的Query对象
 ```java
