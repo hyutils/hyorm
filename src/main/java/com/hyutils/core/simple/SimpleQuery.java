@@ -1,6 +1,7 @@
 package com.hyutils.core.simple;
 
 import com.hyutils.core.instance.PostgreSQLBaseQuery;
+import com.hyutils.core.utils.Json;
 import com.hyutils.core.utils.StringFormatUtils;
 
 import java.lang.reflect.Field;
@@ -8,6 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +26,30 @@ public class SimpleQuery extends PostgreSQLBaseQuery<Map<String, Object>> {
         this.fieldOrgName = "created_org_id";
         this.table = this.camelToUnderscoreConverter.convert(tClass.getSimpleName());
         thisClass = tClass;
+    }
+
+    private <T> T map2Object(Map<String,Object> map){
+        try {
+            T instance = (T) thisClass.getDeclaredConstructor().newInstance();
+            for (Field field : thisClass.getDeclaredFields()) {
+                field.setAccessible(true);
+                String fieldName = field.getName();
+                String small = StringFormatUtils.camel(fieldName);
+                Object value = map.get(small);
+                if (value != null) {
+                    if (value instanceof Timestamp && field.getType().equals(LocalDateTime.class)) {
+                        LocalDateTime dateTime = ((Timestamp) value).toLocalDateTime();
+                        field.set(instance, dateTime);
+                    } else {
+                        field.set(instance, value);
+                    }
+                }
+            }
+            return instance;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private <T> List<T> listMap2Object(List<Map<String, Object>> source) {
@@ -70,12 +96,22 @@ public class SimpleQuery extends PostgreSQLBaseQuery<Map<String, Object>> {
         return this.update(condition, value);
     }
 
+    public Integer updateById(Object id,Map<String,Object> value){
+        Map<String,Object> condition = new HashMap<>();
+        condition.put("id",id);
+        return this.updateByCondition(condition,value);
+    }
+
     public List<Map<String, Object>> findByConditionReturnListMap(Map<String, Object> condition) {
         return this.findListModelBySimpleAnd(condition);
     }
 
     public <T> List<T> findByCondition(Map<String, Object> condition) {
         return listMap2Object(findByConditionReturnListMap(condition));
+    }
+
+    public <T> T simpleGetById(Object id){
+        return map2Object(findModelById(id));
     }
 
     public List<Map<String, Object>> pageReturnListMap(Map<String, Object> crawlTaskHistory, List<Long> orgIds, Integer page, Integer size) {
@@ -93,6 +129,8 @@ public class SimpleQuery extends PostgreSQLBaseQuery<Map<String, Object>> {
     public Integer updateByCondition(Map<String, Object> condition, List<Long> orgIds, Map<String, Object> value) {
         return this.update(mergeCondition(condition, orgIds, this.fieldOrgName), value);
     }
+
+
 
 
     public List<Map<String, Object>> findByConditionReturnListMap(Map<String, Object> condition, List<Long> orgIds) {

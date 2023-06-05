@@ -1,5 +1,7 @@
 package com.hyutils.core.utils;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -27,9 +29,9 @@ public class DatetimeUtil {
 
     public static Long getTimestampOfDatetime(LocalDateTime localDateTime) {
         // TODO: 2022/11/25 这里使用的东八区，没有使用系统默认的
-        if (ZoneId.systemDefault().getId().contains("UTC")){
+        if (ZoneId.systemDefault().getId().contains("UTC")) {
             return localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
-        }else {
+        } else {
             return localDateTime.toInstant(ZoneOffset.ofHours(8)).toEpochMilli();
         }
     }
@@ -61,6 +63,35 @@ public class DatetimeUtil {
         return DatetimeUtil.getDateTimeOfTimestamp(DatetimeUtil.getTimeStampOfViewStr(value, format));
     }
 
+    public static boolean isValidTimeFormat(String timeStr, String formatStr) {
+        SimpleDateFormat sdf = new SimpleDateFormat(formatStr);
+        sdf.setLenient(false); // 禁用严格的解析，确保输入严格符合格式要求
+        try {
+            sdf.parse(timeStr);
+            return true;
+        } catch (ParseException e) {
+            return false;
+        }
+    }
+
+    public static Boolean isValidTimeFormat(String timeStr) {
+        List<String> formats = new ArrayList<String>() {
+            {
+                add("yyyy-MM-dd HH:mm:ss");
+                add("yyyy/MM/dd HH:mm:ss");
+                add("dd-MM-yyyy HH:mm:ss");
+                add("yyyyMMddHHmmss");
+            }
+        };
+        for (String x : formats) {
+            if (Boolean.TRUE.equals(isValidTimeFormat(timeStr,x))){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     public static LocalDateTime getLocalDatetimeByStr(String value) {
         List<String> formats = new ArrayList<String>() {
             {
@@ -79,16 +110,16 @@ public class DatetimeUtil {
         return getLocalDatetimeByStr(value, formats.get(0));
     }
 
-    public static String getYearAndMonthStrByLocalDateTime(LocalDateTime time){
+    public static String getYearAndMonthStrByLocalDateTime(LocalDateTime time) {
         return time.format(DateTimeFormatter.ofPattern("yyyyMM"));
     }
 
-    public static String getYMDHMStrByLocalDateTime(LocalDateTime time){
+    public static String getYMDHMStrByLocalDateTime(LocalDateTime time) {
         return time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
     }
 
-    public static String getYMDStrByLocalDateTime(LocalDateTime time){
-        if (Objects.isNull(time))return "--";
+    public static String getYMDStrByLocalDateTime(LocalDateTime time) {
+        if (Objects.isNull(time)) return "--";
         return time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 
@@ -110,7 +141,7 @@ public class DatetimeUtil {
 
     }
 
-    public static String getExpireTimeStr(LocalDateTime nowTime, LocalDateTime expireTime,Integer fullMinutes) {
+    public static String getExpireTimeStr(LocalDateTime nowTime, LocalDateTime expireTime, Integer fullMinutes) {
         if (expireTime.isAfter(nowTime)) {
             // TODO: 2022/7/26 如果没有超时
             int n = fullMinutes;
@@ -157,7 +188,7 @@ public class DatetimeUtil {
         return getTimestampOfDatetime(localDateTime) / 1000;
     }
 
-    public static LocalDateTime getLocalDatetimeByMileTimestamp(Long timestamp){
-        return getDateTimeOfTimestamp(timestamp*1000L);
+    public static LocalDateTime getLocalDatetimeByMileTimestamp(Long timestamp) {
+        return getDateTimeOfTimestamp(timestamp * 1000L);
     }
 }

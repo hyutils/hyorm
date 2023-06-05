@@ -19,6 +19,7 @@ public class ArrayStrUtil {
         return ans;
     }
 
+
     public static List<String> removeNull(List<String> a){
         List<String> ans = new ArrayList<>();
         for (String y : a){
@@ -42,12 +43,15 @@ public class ArrayStrUtil {
         }
         return ans;
     }
-
     public static List<Long> str2LArray(String str) {
         List<Long> ans = new ArrayList<>();
         List<String> tmp = str2Array(str);
         for (String x : tmp) {
-            ans.add(Long.parseLong(x));
+            x = x.trim();
+            try {
+                ans.add(Long.parseLong(x.trim()));
+            }catch (Exception e){
+            }
         }
         return ans;
     }
@@ -56,7 +60,11 @@ public class ArrayStrUtil {
         List<Integer> ans = new ArrayList<>();
         List<String> tmp = str2Array(str);
         for (String x : tmp) {
-            ans.add(Integer.parseInt(x));
+            x = x.trim();
+            try {
+                ans.add(Integer.parseInt(x.trim()));
+            }catch (Exception e){
+            }
         }
         return ans;
     }
@@ -66,7 +74,7 @@ public class ArrayStrUtil {
         if (Objects.nonNull(str)) {
             String[] tmp = str.split(",");
             for (String x : tmp) {
-                if (Objects.nonNull(x)) {
+                if (StringUtils.hasText(x)) {
                     ans.add(x);
                 }
             }
@@ -74,7 +82,21 @@ public class ArrayStrUtil {
         return ans;
     }
 
+    public static Set<Long> str2LSet(String str) {
+        Set<Long> ans = new HashSet<>();
+        if (Objects.nonNull(str)) {
+            String[] tmp = str.split(",");
+            for (String x : tmp) {
+                if (StringUtils.hasText(x)) {
+                    ans.add(Long.parseLong(x));
+                }
+            }
+        }
+        return ans;
+    }
+
     public static String slist2Str(List<String> a, String b) {
+        if (Objects.isNull(a))return "";
         StringBuilder ans = new StringBuilder();
         int cnt = 0;
         for (String x : a) {
@@ -116,8 +138,8 @@ public class ArrayStrUtil {
         return ans.toString();
     }
 
-    /**
-     * è®¡ç®—å­—ç¬¦ä¸²båœ¨aä¸­å‡ºçŽ°äº†å¤šå°‘æ¬¡
+/**
+     * ¼ÆËã×Ö·û´®bÔÚaÖÐ³öÏÖÁË¶àÉÙ´Î
      *
      * @param a
      * @param b
@@ -155,6 +177,4 @@ public class ArrayStrUtil {
             e.printStackTrace();
         }
         return ans;
-    }
-
-}
+    }}

@@ -2,6 +2,7 @@ package com.hyutils.core.instance;
 
 
 import com.hyutils.core.BaseQuery;
+import com.hyutils.core.constant.ConstantCore;
 import com.hyutils.core.extension.cache.LRUCacheExtensionInterface;
 import com.hyutils.core.extension.dataauth.DataAuthExtensionInterface;
 import com.hyutils.core.extension.like.LikeParamExtension;
@@ -12,6 +13,8 @@ import com.hyutils.core.extension.selectfield.SelectFields;
 import com.hyutils.core.extension.selectorder.SelectOrder;
 import com.hyutils.core.extension.selectorder.SelectOrders;
 import com.hyutils.core.extension.tree.TreeExtenseInterface;
+import com.hyutils.core.extension.visible.BaseApiVisibleExtension;
+import com.hyutils.core.extension.visible.VisibleUser;
 import com.hyutils.core.syntaxtree.AndWhereSyntaxTree;
 import com.hyutils.core.syntaxtree.OrWhereSyntaxTree;
 import com.hyutils.core.syntaxtree.WhereSyntaxTree;
@@ -101,11 +104,18 @@ public class PostgreSQLBaseQuery<T> extends BaseQuery<T>
 //        String sql = defaultGenerateSql();
         logger.debug(sql);
         logger.debug(this.params);
-        try {
-            T xx = SpringContextUtil.getBean(NamedParameterJdbcTemplate.class).queryForObject(sql, this.params, new BeanPropertyRowMapper<>(this.clazz));
-            return xx;
-        } catch (Exception e) {
+        if (Objects.nonNull(this.clazz)){
+            try {
+                T xx = SpringContextUtil.getBean(NamedParameterJdbcTemplate.class).queryForObject(sql, this.params, new BeanPropertyRowMapper<>(this.clazz));
+                return xx;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }else {
+            Map<String,Object> xx = SpringContextUtil.getBean(NamedParameterJdbcTemplate.class).queryForMap(sql, this.params);
+            return (T) xx;
         }
+
         return null;
     }
 

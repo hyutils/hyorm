@@ -83,6 +83,6 @@ public interface TreeExtenseInterface {
 
     List findTreeByPrimaryKey(Object primaryValue, String recursionName);
 
-    List findFatherTreeByPrimaryKey(Object primaryValue, String recursionName);
+    List findFatherTreeByPrimaryKey(Object primaryValue,String recursionName);
 
 }

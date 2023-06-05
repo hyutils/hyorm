@@ -1,8 +1,10 @@
 package com.hyutils.core.extension.like;
 
 
+import com.hyutils.core.utils.DatetimeUtil;
 import org.javatuples.Triplet;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,11 @@ public interface LikeParamExtension {
                 if (((String) a.getValue()).startsWith("-1*")) {
                     return true;
                 }
+                if (a.getKey().endsWith("_bigger_than") || a.getKey().endsWith("_lower_than")) {
+                    return true;
+                }
+            }
+            if (a.getValue() instanceof LocalDateTime){
                 if (a.getKey().endsWith("_bigger_than") || a.getKey().endsWith("_lower_than")) {
                     return true;
                 }
@@ -79,6 +86,16 @@ public interface LikeParamExtension {
                     ans.add(new Triplet<>(a.getKey(), "!=", ((String) a.getValue()).substring(3)));
                     continue;
                 }
+                if (a.getKey().endsWith("_bigger_than") || a.getKey().endsWith("_lower_than")) {
+                    if (a.getKey().endsWith("_bigger_than")) {
+                        ans.add(new Triplet<>(a.getKey().replace("_bigger_than", ""), ">", DatetimeUtil.getLocalDatetimeByStr(a.getValue().toString())));
+                    } else if (a.getKey().endsWith("_lower_than")) {
+                        ans.add(new Triplet<>(a.getKey().replace("_lower_than", ""), "<", DatetimeUtil.getLocalDatetimeByStr(a.getValue().toString())));
+                    }
+                    continue;
+                }
+            }
+            if (a.getValue() instanceof LocalDateTime){
                 if (a.getKey().endsWith("_bigger_than") || a.getKey().endsWith("_lower_than")) {
                     if (a.getKey().endsWith("_bigger_than")) {
                         ans.add(new Triplet<>(a.getKey().replace("_bigger_than", ""), ">", a.getValue()));
