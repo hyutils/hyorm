@@ -18,8 +18,6 @@ public class ArrayStrUtil {
         }
         return ans;
     }
-
-
     public static List<String> removeNull(List<String> a){
         List<String> ans = new ArrayList<>();
         for (String y : a){
@@ -138,8 +136,8 @@ public class ArrayStrUtil {
         return ans.toString();
     }
 
-/**
-     * ¼ÆËã×Ö·û´®bÔÚaÖĞ³öÏÖÁË¶àÉÙ´Î
+    /**
+     * è®¡ç®—å­—ç¬¦ä¸²båœ¨aä¸­å‡ºç°äº†å¤šå°‘æ¬¡
      *
      * @param a
      * @param b
@@ -178,3 +176,5 @@ public class ArrayStrUtil {
         }
         return ans;
     }}
+
+}

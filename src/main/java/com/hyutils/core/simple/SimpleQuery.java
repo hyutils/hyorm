@@ -28,7 +28,7 @@ public class SimpleQuery extends PostgreSQLBaseQuery<Map<String, Object>> {
         thisClass = tClass;
     }
 
-    private <T> T map2Object(Map<String,Object> map){
+    private <T> T map2Object(Map<String, Object> map) {
         try {
             T instance = (T) thisClass.getDeclaredConstructor().newInstance();
             for (Field field : thisClass.getDeclaredFields()) {
@@ -46,7 +46,7 @@ public class SimpleQuery extends PostgreSQLBaseQuery<Map<String, Object>> {
                 }
             }
             return instance;
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
@@ -84,33 +84,61 @@ public class SimpleQuery extends PostgreSQLBaseQuery<Map<String, Object>> {
         return this.countModelBySimpleAnd(condition);
     }
 
+    public <T> Long count(T condition) {
+        return count(Json.toMap(Json.toJson(condition)));
+    }
+
     public List<Map<String, Object>> pageReturnListMap(Map<String, Object> condition, Integer page, Integer size) {
         return this.findListModelBySimpleAnd(condition, page, size);
+    }
+
+    public <T> List<Map<String, Object>> pageReturnListMap(T condition, Integer page, Integer size) {
+        return pageReturnListMap(Json.toMap(Json.toJson(condition)), page, size);
     }
 
     public <T> List<T> page(Map<String, Object> condition, Integer page, Integer size) {
         return listMap2Object(pageReturnListMap(condition, page, size));
     }
 
+    public <T> List<T> page(T condition, Integer page, Integer size) {
+        return page(Json.toMap(Json.toJson(condition)), page, size);
+    }
+
     public Integer updateByCondition(Map<String, Object> condition, Map<String, Object> value) {
         return this.update(condition, value);
     }
 
-    public Integer updateById(Object id,Map<String,Object> value){
-        Map<String,Object> condition = new HashMap<>();
-        condition.put("id",id);
-        return this.updateByCondition(condition,value);
+    public <T> Integer updateByCondition(T condition, T value) {
+        return updateByCondition(Json.toMap(Json.toJson(condition)), Json.toMap(Json.toJson(value)));
+    }
+
+    public Integer updateById(Object id, Map<String, Object> value) {
+        Map<String, Object> condition = new HashMap<>();
+        condition.put("id", id);
+        return this.updateByCondition(condition, value);
+    }
+
+    public <T> Integer updateById(Object id, T value) {
+        return updateById(id, Json.toMap(Json.toJson(value)));
     }
 
     public List<Map<String, Object>> findByConditionReturnListMap(Map<String, Object> condition) {
         return this.findListModelBySimpleAnd(condition);
     }
 
+    public <T> List<Map<String, Object>> findByConditionReturnListMap(T condition) {
+        return findByConditionReturnListMap(Json.toMap(Json.toJson(condition)));
+    }
+
     public <T> List<T> findByCondition(Map<String, Object> condition) {
         return listMap2Object(findByConditionReturnListMap(condition));
     }
 
-    public <T> T simpleGetById(Object id){
+    public <T> List<T> findByCondition(T condition) {
+        return findByCondition(Json.toMap(Json.toJson(condition)));
+    }
+
+    public <T> T simpleGetById(Object id) {
         return map2Object(findModelById(id));
     }
 
@@ -118,23 +146,42 @@ public class SimpleQuery extends PostgreSQLBaseQuery<Map<String, Object>> {
         return this.findListModelByOperateSimpleAnd(mergeCondition(crawlTaskHistory, orgIds, this.fieldOrgName), page, size);
     }
 
-    public <T> List<T> page(Map<String, Object> crawlTaskHistory, List<Long> orgIds, Integer page, Integer size) {
-        return listMap2Object(pageReturnListMap(crawlTaskHistory, orgIds, page, size));
+    public <T> List<Map<String, Object>> pageReturnListMap(T condition, List<Long> orgIds, Integer page, Integer size) {
+        return pageReturnListMap(Json.toMap(Json.toJson(condition)), orgIds, page, size);
     }
 
-    public Long count(Map<String, Object> crawlTaskHistory, List<Long> orgIds) {
-        return this.countModelByOperateSimpleAnd(mergeCondition(crawlTaskHistory, orgIds, this.fieldOrgName));
+
+    public <T> List<T> page(Map<String, Object> condition, List<Long> orgIds, Integer page, Integer size) {
+        return listMap2Object(pageReturnListMap(condition, orgIds, page, size));
+    }
+
+    public <T> List<T> page(T condition, List<Long> orgIds, Integer page, Integer size) {
+        return page(Json.toMap(Json.toJson(condition)), orgIds, page, size);
+    }
+
+    public Long count(Map<String, Object> condition, List<Long> orgIds) {
+        return this.countModelByOperateSimpleAnd(mergeCondition(condition, orgIds, this.fieldOrgName));
+    }
+
+    public <T> Long count(T condition, List<Long> orgIds) {
+        return count(Json.toMap(Json.toJson(condition)), orgIds);
     }
 
     public Integer updateByCondition(Map<String, Object> condition, List<Long> orgIds, Map<String, Object> value) {
         return this.update(mergeCondition(condition, orgIds, this.fieldOrgName), value);
     }
 
-
+    public <T> Integer updateByCondition(T condition,List<Long> orgIds,T value){
+        return updateByCondition(Json.toMap(Json.toJson(condition)),orgIds,Json.toMap(Json.toJson(value)));
+    }
 
 
     public List<Map<String, Object>> findByConditionReturnListMap(Map<String, Object> condition, List<Long> orgIds) {
         return this.findListModelByOperateSimpleAnd(mergeCondition(condition, orgIds, this.fieldOrgName));
+    }
+
+    public <T> List<Map<String,Object>> findByConditionReturnListMap(T condition,List<Long> orgIds){
+        return findByConditionReturnListMap(Json.toMap(Json.toJson(condition)),orgIds);
     }
 
     public <T> List<T> findByCondition(Map<String, Object> condition, List<Long> orgIds) {
@@ -146,25 +193,50 @@ public class SimpleQuery extends PostgreSQLBaseQuery<Map<String, Object>> {
         return this.findListModelByOperateSimpleAndWithOrgIds(condition, orgIds, userId, this.fieldUserName, this.fieldOrgName, "*", null, null);
     }
 
+    public <T> List<Map<String, Object>> findByConditionReturnListMap(T condition, List<Long> orgIds, Long userId) {
+        return findByConditionReturnListMap(Json.toMap(Json.toJson(condition)),orgIds,userId);
+    }
+
     public <T> List<T> findByCondition(Map<String, Object> condition, List<Long> orgIds, Long userId) {
         return listMap2Object(findByConditionReturnListMap(condition, orgIds, userId));
     }
 
 
+    public <T> List<T> findByCondition(T condition, List<Long> orgIds, Long userId) {
+        return findByCondition(Json.toMap(Json.toJson(condition)),orgIds,userId);
+    }
+
     public List<Map<String, Object>> pageReturnListMap(Map<String, Object> condition, List<Long> orgIds, Long userId, Integer page, Integer size) {
         return this.findListModelByOperateSimpleAndWithOrgIds(condition, orgIds, userId, this.fieldUserName, this.fieldOrgName, "*", page, size);
+    }
+
+    public <T> List<Map<String, Object>> pageReturnListMap(T condition, List<Long> orgIds, Long userId, Integer page, Integer size) {
+        return pageReturnListMap(Json.toMap(Json.toJson(condition)),orgIds,userId,page,size);
     }
 
     public <T> List<T> page(Map<String, Object> condition, List<Long> orgIds, Long userId, Integer page, Integer size) {
         return listMap2Object(pageReturnListMap(condition, orgIds, userId, page, size));
     }
 
+    public <T> List<T> page(T condition, List<Long> orgIds, Long userId, Integer page, Integer size) {
+        return page(Json.toMap(Json.toJson(condition)),orgIds,userId,page,size);
+    }
+
     public Long count(Map<String, Object> condition, List<Long> orgIds, Long userId) {
         return this.countByOperateSimpleAndWithOrgIds(condition, orgIds, userId, this.fieldUserName, this.fieldOrgName);
+    }
+
+    public <T> Long count(T condition, List<Long> orgIds, Long userId) {
+        return count(Json.toMap(Json.toJson(condition)),orgIds,userId);
     }
 
     public Integer updateByCondition(Map<String, Object> condition, List<Long> orgIds, Long userId, Map<String, Object> value) {
         return this.updateWithOrgIdsAndUserId(condition, orgIds, userId, this.fieldUserName, this.fieldOrgName, value);
     }
+
+    public <T> Integer updateByCondition(T condition, List<Long> orgIds, Long userId, T value) {
+        return updateByCondition(Json.toMap(Json.toJson(condition)),orgIds,userId,Json.toMap(Json.toJson(value)));
+    }
+
 
 }

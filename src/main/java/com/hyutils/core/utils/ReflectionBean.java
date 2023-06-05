@@ -22,7 +22,13 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
-
+/*
+ * Reflection,请添加文件说明
+ *
+ *
+ * @version 1.0
+ *
+ */
 public abstract class ReflectionBean {
 
     private static final Log logger;

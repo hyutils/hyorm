@@ -770,18 +770,74 @@ public class PostgreSQLBaseQuery<T> extends BaseQuery<T>
         if (Objects.isNull(andCondition)) andCondition = new HashMap<>();
         andCondition = removeNull(andCondition);
         andCondition.put("deleted_mark", false);
+
+
+        SelectOrders selectOrders = null;
+        try {
+            if (andCondition.containsKey("select_orders")) {
+                selectOrders = Json.toObject(Json.toJson(andCondition.get("select_orders")), SelectOrders.class);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        SelectFields selectFields = null;
+        String findVal = "*";
+        try {
+            if (andCondition.containsKey("select_fields")) {
+                selectFields = Json.toObject(Json.toJson(andCondition.get("select_fields")), SelectFields.class);
+                List<String> finds = selectFields.getFields();
+                findVal = ArrayStrUtil.slist2Str(finds, ",");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        andCondition.remove("select_orders");
+        andCondition.remove("select_fields");
         AndWhereSyntaxTree andWhereSyntaxTree = null;
+        // TODO: 2022/7/20 加上有like的情况
         if (checkMapContainsLikeInParam(andCondition)) {
             andWhereSyntaxTree = this.defaultAndWheresWithOperate(map2Triplet(andCondition));
         } else {
             andWhereSyntaxTree = this.defaultAndWheres(andCondition);
         }
+
+        List<Map<String, Object>> tmp = new ArrayList<>();
+        if (Objects.isNull(selectOrders) || selectOrders.getOrders().size() == 0) {
+            tmp = this.find(findVal).where(andWhereSyntaxTree).orderBy(primaryKey, "desc").listMapGet();
+        } else {
+            this.find(findVal).where(andWhereSyntaxTree);
+            List<SelectOrder> x = selectOrders.getOrders();
+            for (SelectOrder y : x) {
+                this.orderBy(y.getKey(), y.getOrder());
+            }
+            tmp = this.listMapGet();
+        }
+
+
+//        AndWhereSyntaxTree andWhereSyntaxTree = null;
+//        if (checkMapContainsLikeInParam(andCondition)) {
+//            andWhereSyntaxTree = this.defaultAndWheresWithOperate(map2Triplet(andCondition));
+//        } else {
+//            andWhereSyntaxTree = this.defaultAndWheres(andCondition);
+//        }
 //        this.defaultAndWheres(andCondition);
-        List<Map<String, Object>> tmp = this.find("*").where(andWhereSyntaxTree).orderBy(primaryKey, "desc").listMapGet();
+//        List<Map<String, Object>> tmp = this.find("*").where(andWhereSyntaxTree).orderBy(primaryKey, "desc").listMapGet();
         List<T> ans = new ArrayList<>();
-        for (Map<String, Object> x : tmp) {
-            T y = Json.toObject(Json.toJson(x), clazz);
-            ans.add(y);
+//        for (Map<String, Object> x : tmp) {
+//
+//            T y = Json.toObject(Json.toJson(x), clazz);
+//            ans.add(y);
+//        }
+        if (Objects.isNull(clazz)) {
+            for (Map<String, Object> x : tmp) {
+                T y = (T) x;
+                ans.add(y);
+            }
+        } else {
+            for (Map<String, Object> x : tmp) {
+                T y = Json.toObject(Json.toJson(x), clazz);
+                ans.add(y);
+            }
         }
         return ans;
     }

@@ -26,7 +26,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-
+/**
+ * Json转换类.
+ *
+ *
+ * @version 1.0   2018/1/18
+ */
 public final class Json {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Json.class);
