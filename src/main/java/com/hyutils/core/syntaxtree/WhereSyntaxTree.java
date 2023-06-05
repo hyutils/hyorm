@@ -18,6 +18,11 @@ public class WhereSyntaxTree {
     public WhereSyntaxNode whereSyntaxNode;
     private Log logger = LogFactory.getLog(WhereSyntaxTree.class);
 
+
+    public List<WhereSyntaxTree> getChildTree() {
+        return childTree;
+    }
+
     public String getSql(Map<String, Object> params) {
         if (isFinal) {
             if (params.containsKey(whereSyntaxNode.getSetName())) {

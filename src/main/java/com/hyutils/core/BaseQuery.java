@@ -98,9 +98,45 @@ public abstract class BaseQuery<T> extends HasAttributes {
 
     public BaseQuery<T> andWheres(Map<String, Object> params) {
         WhereSyntaxTree whereSyntaxTree = new WhereSyntaxTree();
-        this.wheres = whereSyntaxTree.createAndTree(params);
+        if (!this.wheres.isFinal && this.wheres.getChildTree().isEmpty()) {
+            this.wheres = whereSyntaxTree.createAndTree(params);
+        } else {
+            this.wheres.getChildTree().add(whereSyntaxTree.createAndTree(params));
+        }
         return this;
     }
+
+    public BaseQuery<T> andWheres(List<Triplet<String, String, Object>> params) {
+        WhereSyntaxTree whereSyntaxTree = new WhereSyntaxTree();
+        if (!this.wheres.isFinal && this.wheres.getChildTree().isEmpty()) {
+            // TODO: 2023/6/5 刚初始化
+            this.wheres = whereSyntaxTree.createAndTreeByOperate(params);
+        } else {
+            this.wheres.getChildTree().add(whereSyntaxTree.createAndTreeByOperate(params));
+        }
+        return this;
+    }
+
+    public BaseQuery<T> orWheres(Map<String, Object> params) {
+        WhereSyntaxTree whereSyntaxTree = new WhereSyntaxTree();
+        if (!this.wheres.isFinal && this.wheres.getChildTree().isEmpty()) {
+            this.wheres = whereSyntaxTree.createOrTree(params);
+        } else {
+            this.wheres.getChildTree().add(whereSyntaxTree.createOrTree(params));
+        }
+        return this;
+    }
+
+    public BaseQuery<T> orWheres(List<Triplet<String, String, Object>> params) {
+        WhereSyntaxTree whereSyntaxTree = new WhereSyntaxTree();
+        if (!this.wheres.isFinal && this.wheres.getChildTree().isEmpty()) {
+            this.wheres = whereSyntaxTree.createOrTreeByOperate(params);
+        }else {
+            this.wheres.getChildTree().add(whereSyntaxTree.createOrTreeByOperate(params));
+        }
+        return this;
+    }
+
 
     public BaseQuery<T> groupBy(String name, String sort) {
         return this;
@@ -221,7 +257,7 @@ public abstract class BaseQuery<T> extends HasAttributes {
 
     public abstract Integer update(List<Triplet<String, String, Object>> condition, Map<String, Object> values);
 
-    public abstract Integer update(List<Triplet<String, String, Object>> condition, Map<String, Object> values,Integer version);
+    public abstract Integer update(List<Triplet<String, String, Object>> condition, Map<String, Object> values, Integer version);
 
     public abstract Integer updateById(Object primaryKey, Map<String, Object> value);
 
