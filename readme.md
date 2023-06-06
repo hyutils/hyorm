@@ -168,7 +168,7 @@ condition.put("select_fields",new SelectFields().select("a").select("b"));
 ```
 ## 查询时排序操作
 在查询里面加入一个select_orders的字段，该字段是一个符合字段，结构如下
-···java
+```java
 public class SelectOrders {
     private List<SelectOrder> orders;
 
@@ -217,7 +217,7 @@ public class SelectOrder {
         this.order = order;
     }
 }
-···
+```
 使用的方法为
 ```java
 condition.put("select_orders",new SelectOrders()
