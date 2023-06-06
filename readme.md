@@ -1,9 +1,9 @@
 # 基础文档
 hyorm，一款自研java orm框架
 ## 使用简介
-项目地址： https://github.com/hyutils/hyorm
+[项目地址](https://github.com/hyutils/hyorm)
 
-简介地址：https://mp.weixin.qq.com/s/QypOXRgCnt7e6Znig_89rQ
+[文档合集和示例地址](https://mp.weixin.qq.com/mp/appmsgalbum?__biz=MzI5MjY4OTQ2Nw==&action=getalbum&album_id=2954465444592091138&scene=173&from_msgid=2247484152&from_itemidx=1&count=3&nolastread=1#wechat_redirect)
 
 使用方法：引入maven
 ```xml
