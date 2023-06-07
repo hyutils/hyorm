@@ -87,7 +87,7 @@ public class StringFormatUtils {
 
     public static String convertInputStreamToString(InputStream is) throws IOException {
         ByteArrayOutputStream result = new ByteArrayOutputStream();
-        byte[] buffer = new byte[64];
+        byte[] buffer = new byte[4096];
         int length;
         while ((length = is.read(buffer)) != -1) {
             result.write(buffer, 0, length);

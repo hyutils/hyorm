@@ -80,6 +80,10 @@ public class SimpleQuery extends PostgreSQLBaseQuery<Map<String, Object>> {
     }
 
 
+    public <T> Long save(T value) {
+        return this.insert(Json.toMap(Json.toJson(value)));
+    }
+
     public Long count(Map<String, Object> condition) {
         return this.countModelBySimpleAnd(condition);
     }

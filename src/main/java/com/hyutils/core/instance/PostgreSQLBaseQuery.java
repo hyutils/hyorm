@@ -109,7 +109,7 @@ public class PostgreSQLBaseQuery<T> extends BaseQuery<T>
                 T xx = SpringContextUtil.getBean(NamedParameterJdbcTemplate.class).queryForObject(sql, this.params, new BeanPropertyRowMapper<>(this.clazz));
                 return xx;
             } catch (Exception e) {
-                e.printStackTrace();
+//                e.printStackTrace();
             }
         }else {
             Map<String,Object> xx = SpringContextUtil.getBean(NamedParameterJdbcTemplate.class).queryForMap(sql, this.params);
